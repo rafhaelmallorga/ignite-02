@@ -10,19 +10,55 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+
+  const user = users.filter(u => u.username === username)[0]
+
+  if (!user) return response.status(404).json({error: "User not exist."})
+
+  request.user = user;
+
+  return next()
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request;
+
+  if (!user.pro && user.todos.length >= 10) return response.status(403).json({error: "Faça o upgrade para a versão Pro."})
+
+  return next()
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { id } = request.params;
+  const { username } = request.headers;
+
+  const userIndex = users.findIndex(u => u.username === username);
+
+  if (id.length < 20) return response.status(400).json({error: "Invalid ID."})
+
+  if (userIndex === -1) return response.status(404).json({error: "User not found."});
+
+  const todo = users[userIndex].todos?.filter(td => td.id === id)[0]
+
+  if (!todo) return response.status(404).json({error: "Todo not exist."})
+
+  request.todo = todo;
+  request.user = users[userIndex];
+  
+  return next()
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params;
+
+  const userIndex = users.findIndex(u => u.id === id);
+
+  if (userIndex === -1) return response.status(404).json({error: "User not found."});
+
+  request.user = users[userIndex];
+
+  return next();
 }
 
 app.post('/users', (request, response) => {
